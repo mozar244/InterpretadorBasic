@@ -1,0 +1,163 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Estrutura para armazenar variáveis
+typedef struct {
+    char nome[10];
+    int valor;
+} Variavel;
+
+// Função para buscar o valor de uma variável
+int obterValorVariavel(Variavel *variaveis, int numVariaveis, char *nome) {
+    for (int i = 0; i < numVariaveis; i++) {
+        if (strcmp(variaveis[i].nome, nome) == 0) {
+            return variaveis[i].valor;
+        }
+    }
+    return 0;  // Se não encontrar, retorna 0 (ou pode lançar um erro)
+}
+
+// Função para definir o valor de uma variável
+void definirValorVariavel(Variavel *variaveis, int *numVariaveis, char *nome, int valor) {
+    // Verificar se a variável já existe
+    for (int i = 0; i < *numVariaveis; i++) {
+        if (strcmp(variaveis[i].nome, nome) == 0) {
+            variaveis[i].valor = valor;
+            return;
+        }
+    }
+
+    // Verificar se há espaço para adicionar uma nova variável
+    if (*numVariaveis >= 10) {
+        printf("Erro: Limite de variáveis excedido.\n");
+        return;
+    }
+
+    // Se não encontrar a variável, adicionar uma nova
+    strcpy(variaveis[*numVariaveis].nome, nome);
+    variaveis[*numVariaveis].valor = valor;
+    (*numVariaveis)++;
+}
+
+// Função para executar o programa BASIC
+void executarBASIC(FILE *arquivo) {
+    char linha[256];
+    Variavel variaveis[10];  // Armazenar até 10 variáveis
+    int numVariaveis = 0;
+
+    // Ler o arquivo linha por linha
+    while (fgets(linha, sizeof(linha), arquivo)) {
+        // Ignorar espaços em branco no início
+        char *comando = strtok(linha, " ");
+        if (comando == NULL) {
+            continue;
+        }
+
+        // Capturar o número da linha
+        int numeroLinha = atoi(comando);
+
+        // Obter o comando após o número da linha
+        comando = strtok(NULL, " ");
+
+        // Interpretar os comandos BASIC
+        if (strcmp(comando, "REM") == 0) {
+            // Comentário: mostrar o que está escrito
+            char *comentario = strtok(NULL, "\n");
+            if (comentario != NULL) {
+                printf("Comentário: %s\n", comentario);
+            }
+            continue;  // Continue para a próxima linha do arquivo
+        } else if (strcmp(comando, "PRINT") == 0) {
+            // Comando PRINT
+            char *parametro = strtok(NULL, "\n");
+
+            if (parametro != NULL) {
+                // Verificar se o parâmetro é uma string ou uma variável
+                if (parametro[0] == '"') {
+                    // É uma string literal: remove as aspas e imprime
+                    // Remove a aspa inicial
+                    parametro++;
+                    // Remove a aspa final
+                    size_t len = strlen(parametro);
+                    if (parametro[len - 1] == '"') {
+                        parametro[len - 1] = '\0';
+                    }
+                    printf("%s\n", parametro);
+                } else {
+                    // É uma variável: imprime o valor
+                    // Remove espaços em branco extras
+                    while (*parametro == ' ') parametro++;
+                    int valor = obterValorVariavel(variaveis, numVariaveis, parametro);
+                    printf("%d\n", valor);
+                }
+            }
+        } else if (strcmp(comando, "INPUT") == 0) {
+            // Comando INPUT
+            char *parametro = strtok(NULL, "\n");
+            if (parametro != NULL) {
+                // Remove espaços em branco extras
+                while (*parametro == ' ') parametro++;
+                int valor;
+                printf("Informe o valor de %s: ", parametro);
+                scanf("%d", &valor);
+                definirValorVariavel(variaveis, &numVariaveis, parametro, valor);
+            }
+        } else {
+            // Atribuição simples ou operação
+            char *var = comando;  // Variável à esquerda da atribuição
+            comando = strtok(NULL, " ");  // Deve ser "="
+            if (strcmp(comando, "=") == 0) {
+                // Atribuição simples ou operação
+                char *param1 = strtok(NULL, " ");  // Primeira variável ou número
+                char *operador = strtok(NULL, " ");  // Operador (ex: "+")
+                char *param2 = strtok(NULL, "\n");   // Segunda variável ou número
+
+                int valor1 = isdigit(param1[0]) ? atoi(param1) : obterValorVariavel(variaveis, numVariaveis, param1);
+                int valor2 = isdigit(param2[0]) ? atoi(param2) : obterValorVariavel(variaveis, numVariaveis, param2);
+                int resultado = 0;
+
+                if (operador == NULL) {  // Atribuição direta
+                    resultado = valor1;
+                } else if (strcmp(operador, "+") == 0) {
+                    resultado = valor1 + valor2;
+                }
+
+                // Definir o valor na variável
+                definirValorVariavel(variaveis, &numVariaveis, var, resultado);
+            }
+        }
+    }
+}
+
+int main() {
+    char nomeArquivo[256];
+    char *extensao;
+
+    // Solicita o nome do arquivo ao usuário
+    printf("Selecione o arquivo (com o caminho completo): ");
+    scanf("%s", nomeArquivo);
+
+    // Verificar se a extensão do arquivo é ".txt"
+    extensao = strrchr(nomeArquivo, '.');
+    if (extensao == NULL || strcmp(extensao, ".txt") != 0) {
+        printf("Erro: Selecione um arquivo de extensão .txt\n");
+        return 1;
+    }
+
+    // Tentar abrir o arquivo no modo leitura
+    FILE *arquivo = fopen(nomeArquivo, "r");
+    if (arquivo == NULL) {
+        printf("Erro: Não foi possível abrir o arquivo %s\n", nomeArquivo);
+        return 1;
+    }
+
+    // Executar o programa BASIC
+    executarBASIC(arquivo);
+
+    // Fechar o arquivo
+    fclose(arquivo);
+
+    return 0;
+}
