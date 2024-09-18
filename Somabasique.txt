@@ -1,0 +1,11 @@
+10 REM Mozar Guimaraes Junios  
+20 REM Programa para somar dois numeros  
+25 PRINT "Caro usuario, informe os números"  
+30 REM  Valor de N  
+35 INPUT n  
+40 REM numero m  
+45 INPUT m  
+50 idv = n + m  
+55 PRINT "resultado"  
+60 PRINT idv  
+65 HALT
