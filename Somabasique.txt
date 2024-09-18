@@ -3,7 +3,7 @@
 25 PRINT "Caro usuario, informe os números"  
 30 REM  Valor de N  
 35 INPUT n  
-40 REM numero m  
+40 REM Valor de M  
 45 INPUT m  
 50 idv = n + m  
 55 PRINT "resultado"  
