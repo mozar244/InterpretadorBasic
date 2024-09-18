@@ -153,14 +153,23 @@ void executarBASIC(FILE *arquivo) {
         }
     }
 }
-
 int main() {
-    FILE *arquivo = fopen("Somabasique.txt", "r");
+    char nomeArquivo[100];
+
+    // Solicita o nome do arquivo ao usuário
+    printf("Digite o nome do arquivo (com extensão .txt): ");
+    scanf("%s", nomeArquivo);
+
+    // Abre o arquivo em modo de leitura
+    FILE *arquivo = fopen(nomeArquivo, "r");
     if (arquivo == NULL) {
-        fprintf(stderr, "Erro ao abrir o arquivo.\n");
+        fprintf(stderr, "Erro ao abrir o arquivo '%s'. Verifique se o arquivo existe e tente novamente.\n", nomeArquivo);
         return 1;
     }
+
+    // Executa o interpretador BASIC
     executarBASIC(arquivo);
     fclose(arquivo);
+    
     return 0;
 }
